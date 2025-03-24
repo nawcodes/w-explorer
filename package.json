@@ -1,0 +1,18 @@
+{
+  "name": "w-explorer",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "workspaces": [
+    "apps/server",
+    "apps/client"
+  ],
+  "scripts": {
+    "dev:server": "bun run apps/server/src/index.ts",
+    "dev:client": "cd apps/client && bun run dev",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\""
+  }
+}
