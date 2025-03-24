@@ -135,4 +135,85 @@ export class FileService {
             }
         })
     }
+
+    /**
+     * Create multiple files
+     */
+    async createBulkFiles(data: Array<{
+        name: string,
+        folder_id: string,
+        mime_type?: string,
+        size?: number
+    }>) {
+        const files = []
+
+        for (const item of data) {
+            const folder = await prisma.folder.findUnique({
+                where: { id: item.folder_id }
+            })
+
+            if (folder) {
+                const filePath = `${folder.path}/${item.name}`.replace(/\/+/g, '/')
+                files.push({
+                    name: item.name,
+                    path: filePath,
+                    folder_id: item.folder_id,
+                    mime_type: item.mime_type,
+                    size: item.size ?? 0
+                })
+            }
+        }
+
+        return await prisma.file.createMany({
+            data: files
+        })
+    }
+
+    /**
+     * Update multiple files
+     */
+    async updateBulkFiles(data: Array<{
+        id: string,
+        name?: string,
+        mime_type?: string,
+        size?: number
+    }>) {
+        const updates = []
+
+        for (const item of data) {
+            const file = await prisma.file.findUnique({
+                where: { id: item.id },
+                include: { folder: true }
+            })
+
+            if (file) {
+                const updateData: any = { ...item }
+                if (item.name) {
+                    updateData.path = `${file.folder.path}/${item.name}`.replace(/\/+/g, '/')
+                }
+
+                updates.push(
+                    prisma.file.update({
+                        where: { id: item.id },
+                        data: updateData
+                    })
+                )
+            }
+        }
+
+        return await prisma.$transaction(updates)
+    }
+
+    /**
+     * Delete multiple files
+     */
+    async deleteBulkFiles(ids: string[]) {
+        return await prisma.file.deleteMany({
+            where: {
+                id: {
+                    in: ids
+                }
+            }
+        })
+    }
 }

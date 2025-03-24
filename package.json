@@ -14,6 +14,6 @@
     "dev:server": "bun run apps/server/src/index.ts",
     "dev:client": "bun run apps/client/src/main.ts",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "seed": "bun run apps/server/prisma/seed.ts"
+    "seed:server": "bun run apps/server/prisma/seed.ts"
   }
 }

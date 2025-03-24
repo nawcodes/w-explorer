@@ -34,8 +34,6 @@ export class FolderService {
     async createFolder(data: {
         name: string,
         parent_id?: string,
-        is_system?: boolean,
-        is_hidden?: boolean
     }) {
         // if parent_id, get parent path
         let parentPath = '/'
@@ -56,8 +54,6 @@ export class FolderService {
                 name: data.name,
                 path: newPath,
                 parent_id: data.parent_id,
-                is_system: data.is_system ?? false,
-                is_hidden: data.is_hidden ?? false
             }
         })
     }
@@ -71,8 +67,6 @@ export class FolderService {
      */
     async updateFolder(id: string, data: {
         name?: string,
-        is_system?: boolean,
-        is_hidden?: boolean
     }) {
         const folder = await prisma.folder.findUnique({
             where: { id }
@@ -156,6 +150,93 @@ export class FolderService {
             include: {
                 files: true,
                 parent: true
+            }
+        })
+    }
+
+    /**
+     * Create multiple folders
+     */
+    async createBulkFolders(data: Array<{
+        name: string,
+        parent_id?: string,
+    }>) {
+        const folders = []
+
+        for (const item of data) {
+            let parentPath = '/'
+            if (item.parent_id) {
+                const parent = await prisma.folder.findUnique({
+                    where: { id: item.parent_id }
+                })
+                if (parent) {
+                    parentPath = parent.path
+                }
+            }
+
+            const newPath = `${parentPath}${item.name}`.replace(/\/+/g, '/')
+            folders.push({
+                name: item.name,
+                path: newPath,
+                parent_id: item.parent_id,
+            })
+        }
+
+        return await prisma.folder.createMany({
+            data: folders
+        })
+    }
+
+    /**
+     * Update multiple folders
+     */
+    async updateBulkFolders(data: Array<{
+        id: string,
+        name?: string,
+    }>) {
+        const updates = []
+
+        for (const item of data) {
+            const folder = await prisma.folder.findUnique({
+                where: { id: item.id }
+            })
+
+            if (folder && item.name) {
+                const parentPath = folder.path.substring(0, folder.path.lastIndexOf('/'))
+                const newPath = `${parentPath}/${item.name}`.replace(/\/+/g, '/')
+                updates.push(
+                    prisma.folder.update({
+                        where: { id: item.id },
+                        data: {
+                            name: item.name,
+                            path: newPath
+                        }
+                    })
+                )
+            }
+        }
+
+        return await prisma.$transaction(updates)
+    }
+
+    /**
+     * Delete multiple folders
+     */
+    async deleteBulkFolders(ids: string[]) {
+        // First delete all files in these folders
+        await prisma.file.deleteMany({
+            where: {
+                folder_id: {
+                    in: ids
+                }
+            }
+        })
+
+        return await prisma.folder.deleteMany({
+            where: {
+                id: {
+                    in: ids
+                }
             }
         })
     }
