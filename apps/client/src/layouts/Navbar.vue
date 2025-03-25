@@ -1,8 +1,8 @@
 <template>
-  <nav class="fixed top-0 z-50 w-full bg-white border-b border-gray-200">
+  <nav class="fixed top-0 z-50 w-full bg-white border-b border-gray-200 bg-blue-400 text-white">
     <div class="px-3 py-3 lg:px-5 lg:pl-3">
-      <div class="flex items-center">
-        <div class="flex items-center justify-start">
+      <div class="flex">
+        <div class="w-1/4">
           <button @click="$emit('toggle-sidebar')" class="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200">
             <span class="sr-only">Open sidebar</span>
             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -13,10 +13,10 @@
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-8 mr-3">
               <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
             </svg>
-            <span class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap">Windows Explorer</span>
+            <span class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap">WExplorer</span>
           </div>
         </div>
-        <div class="flex items-center">
+        <div class="w-1/3">
           <div class="relative">
             <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
               <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -24,7 +24,7 @@
               </svg>
             </div>
             <input type="text" 
-              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-64 pl-10 p-2.5"
+              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-64 pl-10 p-2.5 w-full"
               placeholder="Search..."
               @input="$emit('search', ($event.target as HTMLInputElement).value)"
             >
