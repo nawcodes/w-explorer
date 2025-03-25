@@ -1,14 +1,23 @@
 // this shim is required
-import { createExpressServer } from 'routing-controllers';
+import { createExpressServer, useContainer } from 'routing-controllers';
+import { Container } from 'typedi';
 import { FolderController } from './controllers/folder-controller';
+import { FileController } from './controllers/file-controller';
 import dotenv from 'dotenv';
 import { prisma } from './utils/prisma';
+
+// Enable validation
+useContainer(Container);
 
 // creates express app, registers all controller routes and returns you express app instance
 const app = createExpressServer({
     routePrefix: '/api',
     cors: true,
-    controllers: [FolderController], // we specify controllers we want to use
+    controllers: [FolderController, FileController],
+    validation: {
+        whitelist: true,
+        forbidNonWhitelisted: true,
+    },
     defaultErrorHandler: true,
 });
 
