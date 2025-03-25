@@ -13,7 +13,7 @@
   "scripts": {
     "dev:server": "bun run apps/server/src/index.ts",
     "dev:client": "bun run --cwd apps/client dev",
-    "dev": "concurrently \"bun run dev:server\" \"bun run dev:client\"",
+    "dev": "bun run dev:server & bun run dev:client",
     "seed:server": "bun run apps/server/prisma/seed.ts"
   }
 }
