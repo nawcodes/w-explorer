@@ -4,64 +4,37 @@
     isOpen ? 'translate-x-0' : '-translate-x-full',
     'sm:translate-x-0'
   ]">
-    <div class="h-full px-3 py-4 overflow-y-auto bg-gray-50">
-      <!-- Search Box -->
-      <div class="mb-4">
-        <div class="relative">
-          <input type="text" 
-            class="w-full pl-10 pr-4 py-2 border rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Search folders..."
-          >
-          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
-        </div>
+    <div class="h-full flex flex-col bg-gray-50">
+      <!-- Fixed Section (Search & Create) -->
+      <div class="flex-shrink-0 px-3 py-4 border-b border-gray-200">
+        <!-- Search Box -->
+        <SearchFolder @search="handleSearch" />
+
+        <!-- Create Root Folder Button -->
+        <CreateFolderButton 
+          @create="handleCreateRootFolder" 
+          buttonText="Create Source Folder"
+        />
       </div>
 
-       
-
-      <!-- Folder Navigation -->
-      <nav class="space-y-1">
-        <!-- button create folder -->
-
-        <div class="flex items-center px-2 py-2 text-sm font-medium text-gray-600 uppercase">
-            <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z" clip-rule="evenodd" />
-            </svg>
-            <button class="text-sm font-medium text-gray-600 uppercase hover:text-gray-800  ">
-                Create Source Folder
-            </button>
-        </div>
-        <!-- Favorites Section -->
-        <div class="mb-4">
-          <div class="flex items-center px-2 py-2 text-sm font-medium text-gray-600 uppercase">
-            <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-            </svg>
-            Favorites
-          </div>
-          <FolderTreeItem 
-            :folder="rootFolder"
-            :level="0"
-            :max-depth="5"
-          />
-        </div>
-
-        <!-- All Folders Section -->
+      <!-- Scrollable Section -->
+      <nav class="flex-1 px-3 py-2 overflow-y-auto space-y-1">
+        <!-- Root Folders Section -->
         <div>
-          <div class="flex items-center px-2 py-2 text-sm font-medium text-gray-600 uppercase">
-            <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-            </svg>
-            All Folders
+          
+          <div class="mt-1 pb-20">
+            <!-- Hanya menampilkan root folders -->
+            <div v-for="folder in rootFolders" :key="folder.id" 
+              class="flex items-center px-2 py-1.5 text-sm rounded-md cursor-pointer hover:bg-gray-200"
+              @click="handleSelectFolder(folder)"
+            >
+              <svg class="w-5 h-5 mr-2 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                  d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+              </svg>
+              <span class="truncate">{{ folder.name }}</span>
+            </div>
           </div>
-          <FolderTreeItem 
-            :folder="rootFolder"
-            :level="0"
-            :max-depth="5"
-          />
         </div>
       </nav>
     </div>
@@ -69,19 +42,94 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import FolderTreeItem from '@/components/FolderTreeItem.vue'
-import type { Folder } from '../types/folder';
+import { ref, onMounted } from 'vue'
+import SearchFolder from '@/components/sidebar/SearchFolder.vue'
+import CreateFolderButton from '@/components/sidebar/CreateFolderButton.vue'
+import { FolderService } from '../services/folder.service'
+import type { Folder } from '../types/folder'
 
-defineProps<{
+const props = defineProps<{
   isOpen: boolean
 }>()
 
-const rootFolder = ref<Folder>({
-  id: 'root',
-  name: 'Root',
-  path: '/',
-  isOpen: true,
-  subfolders: []
+const emit = defineEmits(['select-folder'])
+
+// Menyimpan daftar root folders
+const rootFolders = ref<Folder[]>([])
+
+// Fetch root folders from API
+const fetchRootFolders = async () => {
+  const { data, error } = await FolderService.getAllFolders()
+  if (data) {
+    // Filter hanya root folders (yang tidak memiliki parent_id)
+    rootFolders.value = data.filter(folder => !folder.parent_id)
+  } else if (error) {
+    console.error('Error fetching folders:', error)
+  }
+}
+
+// Handle root folder creation
+const handleCreateRootFolder = async (name: string) => {
+  const { data, error } = await FolderService.createFolder({ 
+    name,
+    // Tidak perlu parent_id karena ini root folder
+  })
+  if (data) {
+    rootFolders.value.push(data)
+  } else if (error) {
+    console.error('Error creating root folder:', error)
+  }
+}
+
+// Handle folder search
+const handleSearch = async (searchTerm: string) => {
+  if (!searchTerm.trim()) {
+    await fetchRootFolders()
+    return
+  }
+
+  const { data, error } = await FolderService.searchFolders(searchTerm)
+  if (data) {
+    // Tetap filter hanya root folders dalam hasil pencarian
+    rootFolders.value = data.filter(folder => !folder.parent_id)
+  } else if (error) {
+    console.error('Error searching folders:', error)
+  }
+}
+
+// Handle folder selection
+const handleSelectFolder = (folder: Folder) => {
+  emit('select-folder', folder)
+}
+
+onMounted(() => {
+  fetchRootFolders()
 })
-</script> 
+</script>
+
+<style scoped>
+/* Tambahkan smooth scrolling */
+nav {
+  scrollbar-width: thin;
+  scrollbar-color: #CBD5E0 #EDF2F7;
+}
+
+nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+nav::-webkit-scrollbar-track {
+  background: #EDF2F7;
+}
+
+nav::-webkit-scrollbar-thumb {
+  background-color: #CBD5E0;
+  border-radius: 3px;
+}
+
+/* Smooth sticky header transition */
+.sticky {
+  backdrop-filter: blur(8px);
+  background-color: rgba(249, 250, 251, 0.9);
+}
+</style> 
