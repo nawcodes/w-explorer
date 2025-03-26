@@ -5,12 +5,21 @@ import Sidebar from '@/layouts/Sidebar.vue'
 import Content from '@/layouts/Content.vue'
 import { FolderService } from './services/folder.service'
 import type { Folder } from './types/folder'
+import type { File } from './types/file'
+import CreateFolderModal from '@/components/modals/CreateFolderModal.vue'
+import UploadFileModal from '@/components/modals/UploadFileModal.vue'
 
 const isSidebarOpen = ref(true)
 const currentFolder = ref<Folder | null>(null)
 const currentPath = ref<string[]>([])
-const items = ref<Folder[]>([])
+const folders = ref<Folder[]>([])
+const files = ref<File[]>([])
+const items = computed(() => [...folders.value, ...files.value])
 const hasItems = computed(() => items.value.length > 0)
+
+// Modal states
+const isCreateFolderModalOpen = ref(false)
+const isUploadFileModalOpen = ref(false)
 
 // Handle folder selection dari sidebar atau content
 const handleFolderSelect = async (folder: Folder) => {
@@ -71,13 +80,23 @@ const updateCurrentPath = (folder: Folder) => {
 // Load contents dari folder yang dipilih
 const loadFolderContents = async (folderId: string) => {
   try {
-    const { data } = await FolderService.getSubfolders(folderId)
-    if (data) {
-      items.value = data.data
+    const { data } = await FolderService.getFolderContents(folderId)
+
+    if (data?.data) {
+      // Update folders dan files secara terpisah
+      folders.value = data.data.folders.map(folder => ({
+        ...folder,
+        type: 'folder' as const
+      }))
+      files.value = data.data.files.map(file => ({
+        ...file,
+        type: 'file' as const
+      }))
     }
   } catch (error) {
     console.error('Error loading folder contents:', error)
-    items.value = []
+    folders.value = []
+    files.value = []
   }
 }
 
@@ -137,15 +156,56 @@ const toggleSidebar = () => {
   isSidebarOpen.value = !isSidebarOpen.value
 }
 
-/**
- * @todo: do later
- */
+// Handle create folder
 const handleCreateFolder = () => {
-  // Logic untuk membuat folder
+  isCreateFolderModalOpen.value = true
 }
 
+const handleCreateFolderSubmit = async (data: { name: string, parent_id?: string }) => {
+  try {
+    const response = await FolderService.createFolder({
+      name: data.name,
+      parent_id: currentFolder.value?.id
+    })
+
+    if (response.data?.data) {
+      // Reload current folder contents
+      await loadFolderContents(currentFolder.value?.id || '')
+    }
+  } catch (error) {
+    console.error('Error creating folder:', error)
+  } finally {
+    isCreateFolderModalOpen.value = false
+  }
+}
+
+// Handle upload file
 const handleUploadFile = () => {
-  // Logic untuk upload file
+  isUploadFileModalOpen.value = true
+}
+
+const handleUploadFileSubmit = async (data: { files: File[], folderId?: string }) => {
+  try {
+    const formData = new FormData()
+    data.files.forEach(file => {
+      formData.append('files', file)
+    })
+    
+    if (currentFolder.value?.id) {
+      formData.append('folderId', currentFolder.value.id)
+    }
+
+    const response = await FolderService.uploadFiles(formData)
+    
+    if (response.data) {
+      // Reload current folder contents
+      await loadFolderContents(currentFolder.value?.id || '')
+    }
+  } catch (error) {
+    console.error('Error uploading files:', error)
+  } finally {
+    isUploadFileModalOpen.value = false
+  }
 }
 </script>
 
@@ -168,6 +228,21 @@ const handleUploadFile = () => {
       @navigate="handleContentNavigation"
       @create-folder="handleCreateFolder"
       @upload-file="handleUploadFile"
+    />
+
+    <!-- Modals -->
+    <CreateFolderModal
+      :is-open="isCreateFolderModalOpen"
+      :current-folder-id="currentFolder?.id"
+      @close="isCreateFolderModalOpen = false"
+      @create="handleCreateFolderSubmit"
+    />
+    
+    <UploadFileModal
+      :is-open="isUploadFileModalOpen"
+      :current-folder-id="currentFolder?.id"
+      @close="isUploadFileModalOpen = false"
+      @upload="handleUploadFileSubmit"
     />
   </div>
 </template>

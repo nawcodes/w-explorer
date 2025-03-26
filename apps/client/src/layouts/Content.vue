@@ -52,6 +52,7 @@ import EmptyState from '@/components/content/EmptyState.vue'
 import ContentItem from '@/components/content/ContentItem.vue'
 import CreateMenu from '@/components/content/CreateMenu.vue'
 import type { Folder } from '../types/folder'
+import type { File } from '../types/file'
 
 const props = defineProps<{
   currentPath: string[]
@@ -69,8 +70,12 @@ const toggleCreateMenu = () => {
   isCreateMenuOpen.value = !isCreateMenuOpen.value
 }
 
-const handleItemClick = (item: Folder) => {    
-  emit('navigate', item)
+const handleItemClick = (item: Folder | File) => {
+  if (item.type === 'folder') {
+    emit('navigate', item)
+  } else {
+     // open modal detail file
+  }
 }
 
 const handleBreadcrumbNavigation = (index: number | null) => {  

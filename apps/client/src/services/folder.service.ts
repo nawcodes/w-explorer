@@ -1,5 +1,11 @@
 import { ApiService } from './api.service'
 import type { Folder } from '../types/folder'
+import type { File } from '../types/file'
+
+interface FolderContents {
+    folders: Folder[]
+    files: File[]
+}
 
 export class FolderService {
     static async getAllFolders() {
@@ -11,7 +17,12 @@ export class FolderService {
     }
 
     static async createFolder(data: { name: string; parent_id?: string }) {
-        return await ApiService.post<Folder>('/folders', data)
+        try {
+            const response = await ApiService.post<Folder>('/folders', data)
+            return { data: response, error: null }
+        } catch (error) {
+            return { data: null, error }
+        }
     }
 
     static async updateFolder(id: string, data: { name: string }) {
@@ -53,6 +64,28 @@ export class FolderService {
 
             console.log(response);
 
+            return { data: response, error: null }
+        } catch (error) {
+            return { data: null, error }
+        }
+    }
+
+    static async uploadFiles(formData: FormData) {
+        try {
+            const response = await ApiService.post<any>('/files/upload', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            })
+            return { data: response, error: null }
+        } catch (error) {
+            return { data: null, error }
+        }
+    }
+
+    static async getFolderContents(folderId: string) {
+        try {
+            const response = await ApiService.get<FolderContents>(`/folders/${folderId}/contents`)
             return { data: response, error: null }
         } catch (error) {
             return { data: null, error }

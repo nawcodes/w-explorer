@@ -57,11 +57,10 @@ const emit = defineEmits(['select-folder'])
 // Menyimpan daftar root folders
 const rootFolders = ref<Folder[]>([])
 
-// Fetch root folders from API
 const fetchRootFolders = async () => {
   const { data, error } = await FolderService.getAllFolders()
+  
   if (data) {
-    // Filter hanya root folders (yang tidak memiliki parent_id)
     rootFolders.value = data.filter(folder => !folder.parent_id)
   } else if (error) {
     console.error('Error fetching folders:', error)

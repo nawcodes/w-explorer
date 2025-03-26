@@ -75,7 +75,7 @@ export class FolderController {
         return await this.folderService.deleteBulkFolders(data.ids);
     }
 
-    @Get(':id/contents')
+    @Get('/:id/contents')
     async getFolderContents(@Param('id') id: string) {
         return await this.folderService.getFolderContents(id)
     }

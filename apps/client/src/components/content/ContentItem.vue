@@ -26,17 +26,36 @@
       </svg>
       <span class="ml-2 truncate">{{ item.name }}</span>
     </div>
+    <!-- File Info -->
+    <div v-if="item.type === 'file'" class="mt-2 text-xs text-gray-500">
+      <span>{{ formatFileSize(item.size) }}</span>
+      <span class="mx-2">•</span>
+      <span>{{ formatDate(item.created_at) }}</span>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import type { Folder } from '../../types/folder'
+import type { File } from '../../types/file'
 
 interface Props {
-  item: Folder
+  item: Folder | File
 }
 
 const props = defineProps<Props>()
 
 defineEmits(['click'])
+
+// Utility functions
+const formatFileSize = (bytes?: number): string => {
+  if (!bytes) return '0 B'
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
+  const i = Math.floor(Math.log(bytes) / Math.log(1024))
+  return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`
+}
+
+const formatDate = (dateString: string): string => {
+  return new Date(dateString).toLocaleDateString()
+}
 </script> 
