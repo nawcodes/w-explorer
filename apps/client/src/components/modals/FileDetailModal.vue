@@ -42,16 +42,6 @@
           </div>
          
         </div>
-
-        <!-- Delete File Button -->
-        <div class="flex justify-end">
-          <button 
-            @click="$emit('delete')"
-            class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
-          >
-            Delete File
-          </button>
-        </div>
         
       </div>
     </div>
@@ -67,7 +57,7 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-const emit = defineEmits(['close', 'download'])
+const emit = defineEmits(['close'])
 
 const formatFileSize = (bytes?: number): string => {
   if (!bytes) return '0 B'
@@ -85,6 +75,7 @@ const formatDate = (dateString: string): string => {
     minute: '2-digit'
   })
 }
+
 
 
 </script> 

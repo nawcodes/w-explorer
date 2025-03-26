@@ -91,7 +91,7 @@ import { FolderService } from '../services/folder.service'
 import type { Folder } from '../types/folder'
 import type { File } from '../types/file'
 
-const emit = defineEmits(['toggle-sidebar', 'navigate'])
+const emit = defineEmits(['toggle-sidebar', 'navigate', 'show-file-detail'])
 
 const searchQuery = ref('')
 const searchResults = ref<(Folder | File)[]>([])
@@ -143,7 +143,12 @@ const handleItemClick = (item: Folder | File) => {
   searchQuery.value = ''
   searchResults.value = []
   showDropdown.value = false
-  emit('navigate', item)
+  
+  if (item.type === 'folder') {
+    emit('navigate', item)
+  } else {
+    emit('show-file-detail', item)
+  }
 }
 
 // Close dropdown when clicking outside

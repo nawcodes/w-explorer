@@ -23,6 +23,7 @@ const hasItems = computed(() => items.value.length > 0)
 const isCreateFolderModalOpen = ref(false)
 const isUploadFileModalOpen = ref(false)
 const isFileDetailModalOpen = ref(false)
+
 // Handle folder selection from sidebar or content
 const handleFolderSelect = async (folder: Folder) => {
   currentFolder.value = folder
@@ -265,7 +266,7 @@ const handleSearchNavigation = async (item: Folder | File) => {
   <div class="min-h-screen bg-gray-100 font-mono">
     <Navbar 
       @toggle-sidebar="toggleSidebar" 
-      @navigate="handleSearchNavigation"
+      @navigate="handleContentNavigation"
     />
 
     <!-- Sidebar with currentFolderId -->
@@ -301,6 +302,14 @@ const handleSearchNavigation = async (item: Folder | File) => {
       :current-folder-id="currentFolder?.id || ''"
       @close="isUploadFileModalOpen = false"
       @uploaded="handleUploadComplete"
+    />
+
+    <!-- Add FileDetailModal component -->
+    <FileDetailModal 
+      v-if="selectedFile" 
+      :is-open="isFileDetailModalOpen" 
+      :file="selectedFile"
+      @close="isFileDetailModalOpen = false" 
     />
   </div>
 </template>
