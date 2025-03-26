@@ -53,4 +53,13 @@ export class BulkDeleteFolderDto {
     @IsArray()
     @IsUUID("all", { each: true })
     ids: string[];
+}
+
+export class GetFolderByPathDto {
+    @IsString()
+    @Length(1, 1000)
+    @Matches(/^[^<>"|?*]+$/, {
+        message: 'Path contains invalid characters'
+    })
+    path: string;
 } 

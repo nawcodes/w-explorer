@@ -39,15 +39,20 @@ export class FolderService {
         let parentPath = '/'
         if (data.parent_id) {
             const parent = await prisma.folder.findUnique({
-                where: { id: data.parent_id }
+                where: { id: data.parent_id },
+                include: {
+                    parent: true
+                }
             })
             if (parent) {
                 parentPath = parent.path
             }
         }
 
-        // create new path
-        const newPath = `${parentPath}${data.name}`.replace(/\/+/g, '/')
+        // create new path dengan memastikan ada slash di antara parent dan nama folder
+        const newPath = parentPath === '/'
+            ? `/${data.name}`
+            : `${parentPath}/${data.name}`
 
         return await prisma.folder.create({
             data: {
@@ -239,5 +244,75 @@ export class FolderService {
                 }
             }
         })
+    }
+
+    /**
+     * Get folder contents
+     * @param id 
+     * @returns 
+     */
+    async getFolderContents(id: string) {
+        const contents = await prisma.folder.findUnique({
+            where: { id },
+            include: {
+                files: true,
+                subfolders: {
+                    include: {
+                        files: true,
+                        parent: true
+                    }
+                }
+            }
+        })
+
+        if (!contents) {
+            throw new Error('Folder not found')
+        }
+
+        return {
+            folders: contents.subfolders.map(subfolder => ({
+                ...subfolder,
+                type: 'folder',
+                // Pastikan path menggunakan format yang benar
+                path: subfolder.parent
+                    ? `${subfolder.parent.path}/${subfolder.name}`
+                    : `/${subfolder.name}`
+            })),
+            files: contents.files.map(file => ({
+                ...file,
+                type: 'file'
+            }))
+        }
+    }
+
+    async getFolderByPath(path: string) {
+        const folder = await prisma.folder.findFirst({
+            where: { path },
+            include: {
+                files: true,
+                subfolders: {
+                    include: {
+                        files: true
+                    }
+                }
+            }
+        })
+
+        if (!folder) {
+            throw new Error(`Folder with path ${path} not found`)
+        }
+
+        return {
+            ...folder,
+            type: 'folder',
+            subfolders: folder.subfolders.map(subfolder => ({
+                ...subfolder,
+                type: 'folder'
+            })),
+            files: folder.files.map(file => ({
+                ...file,
+                type: 'file'
+            }))
+        }
     }
 }

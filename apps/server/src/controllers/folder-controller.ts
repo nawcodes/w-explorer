@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import 'reflect-metadata';
-import { Controller, Param, Body, Get, Post, Put, Delete, JsonController, Res, HttpCode } from 'routing-controllers';
+import { Controller, Param, Body, Get, Post, Put, Delete, JsonController, Res, HttpCode, QueryParam } from 'routing-controllers';
 import { FolderService } from '../services/folder-service';
 import {
     CreateFolderDto,
@@ -73,5 +73,20 @@ export class FolderController {
     @Delete('/bulk')
     async removeBulk(@Body() data: BulkDeleteFolderDto) {
         return await this.folderService.deleteBulkFolders(data.ids);
+    }
+
+    @Get(':id/contents')
+    async getFolderContents(@Param('id') id: string) {
+        return await this.folderService.getFolderContents(id)
+    }
+
+    @Get('/by-path')
+    async getFolderByPath(@QueryParam('path') path: string) {
+        if (!path) {
+            throw new Error('Path is required')
+        }
+        // Normalize path to ensure consistent format
+        const normalizedPath = '/' + path.split('/').filter(Boolean).join('/')
+        return await this.folderService.getFolderByPath(normalizedPath)
     }
 }
