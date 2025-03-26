@@ -26,6 +26,7 @@ const isUploadFileModalOpen = ref(false)
 // Handle folder selection from sidebar or content
 const handleFolderSelect = async (folder: Folder) => {
   currentFolder.value = folder
+  folder.type = 'folder'
   
   // if folder has parent_id, we need to build the full path
   if (folder.parent_id && !folder.path?.includes('/')) {
@@ -149,6 +150,7 @@ const loadInitialData = async () => {
         })
         
         const firstCreatedFolder = sortedFolders[0]
+        firstCreatedFolder.type = 'folder'
         await handleFolderSelect(firstCreatedFolder)
       } else {
         // Reset states when no folders exist
@@ -215,6 +217,37 @@ const handleUploadComplete = async (uploadedFiles: any) => {
         await loadFolderContents(currentFolder.value.id)
     }
 }
+
+const handleItemDelete = async (item: Folder | File) => {
+  // check if this current folder want to delete
+  let willDeleteCurrentFolder = false
+  if (item.id === currentFolder.value?.id) {
+    willDeleteCurrentFolder = true
+  }
+
+  try {
+    if (item.type === 'folder') {
+      await FolderService.deleteFolder(item.id)
+    } else {
+      await FolderService.deleteFile(item.id)
+    }
+    
+    // Refresh current folder contents
+    if (willDeleteCurrentFolder) {
+      await loadInitialData()
+      // hard reload page
+      window.location.reload()
+    } else {
+      if (currentFolder.value?.id) {
+        await loadFolderContents(currentFolder.value.id)
+      }
+    }
+  } catch (error) {
+    console.error(`Error deleting ${item.type}:`, error)
+  }
+}
+
+
 </script>
 
 <template>
@@ -238,6 +271,7 @@ const handleUploadComplete = async (uploadedFiles: any) => {
       @navigate="handleContentNavigation"
       @create-folder="handleCreateFolder"
       @upload-file="handleUploadFile"
+      @delete-item="handleItemDelete"
     />
 
     <!-- Modals -->

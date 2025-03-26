@@ -43,7 +43,16 @@
          
         </div>
 
-       
+        <!-- Delete File Button -->
+        <div class="flex justify-end">
+          <button 
+            @click="$emit('delete')"
+            class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
+          >
+            Delete File
+          </button>
+        </div>
+        
       </div>
     </div>
   </div>

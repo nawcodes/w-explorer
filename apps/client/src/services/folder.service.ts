@@ -105,4 +105,8 @@ export class FolderService {
             return { data: null, error }
         }
     }
+
+    static async deleteFile(fileId: string) {
+        return await ApiService.delete<void>(`/files/${fileId}`)
+    }
 } 
