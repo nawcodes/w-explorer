@@ -91,6 +91,9 @@ import { FolderService } from '../services/folder.service'
 import type { Folder } from '../types/folder'
 import type { File } from '../types/file'
 
+const isFileDetailModalOpen = ref(false)
+const selectedFile = ref<File | null>(null)
+
 const emit = defineEmits(['toggle-sidebar', 'navigate', 'show-file-detail'])
 
 const searchQuery = ref('')

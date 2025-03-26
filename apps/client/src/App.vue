@@ -8,6 +8,7 @@ import type { Folder } from './types/folder'
 import type { File } from './types/file'
 import CreateFolderModal from '@/components/modals/CreateFolderModal.vue'
 import UploadFileModal from '@/components/modals/UploadFileModal.vue'
+import FileDetailModal from '@/components/modals/FileDetailModal.vue'
 
 const isSidebarOpen = ref(true)
 const currentFolder = ref<Folder | null>(null)
@@ -23,6 +24,7 @@ const hasItems = computed(() => items.value.length > 0)
 const isCreateFolderModalOpen = ref(false)
 const isUploadFileModalOpen = ref(false)
 const isFileDetailModalOpen = ref(false)
+const selectedFile = ref<File | null>(null)
 
 // Handle folder selection from sidebar or content
 const handleFolderSelect = async (folder: Folder) => {
@@ -260,6 +262,11 @@ const handleSearchNavigation = async (item: Folder | File) => {
   }
 }
 
+const handleShowFileDetail = (file: File) => {
+  selectedFile.value = file
+  isFileDetailModalOpen.value = true
+}
+
 </script>
 
 <template>
@@ -267,6 +274,7 @@ const handleSearchNavigation = async (item: Folder | File) => {
     <Navbar 
       @toggle-sidebar="toggleSidebar" 
       @navigate="handleContentNavigation"
+      @show-file-detail="handleShowFileDetail"
     />
 
     <!-- Sidebar with currentFolderId -->
