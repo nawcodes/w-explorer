@@ -14,6 +14,8 @@ const currentFolder = ref<Folder | null>(null)
 const currentPath = ref<string[]>([])
 const folders = ref<Folder[]>([])
 const files = ref<File[]>([])
+const hasAnyFolders = ref(false)
+
 const items = computed(() => [...folders.value, ...files.value])
 const hasItems = computed(() => items.value.length > 0)
 
@@ -21,11 +23,11 @@ const hasItems = computed(() => items.value.length > 0)
 const isCreateFolderModalOpen = ref(false)
 const isUploadFileModalOpen = ref(false)
 
-// Handle folder selection dari sidebar atau content
+// Handle folder selection from sidebar or content
 const handleFolderSelect = async (folder: Folder) => {
   currentFolder.value = folder
   
-  // Jika folder memiliki parent_id, kita perlu membangun path lengkap
+  // if folder has parent_id, we need to build the full path
   if (folder.parent_id && !folder.path?.includes('/')) {
     const parentFolder = await FolderService.getFolderById(folder.parent_id)
     if (parentFolder?.data) {
@@ -38,14 +40,14 @@ const handleFolderSelect = async (folder: Folder) => {
   await loadFolderContents(folder.id)
 }
 
-// Update current path berdasarkan folder yang dipilih
+// update current path
 const updateCurrentPath = (folder: Folder) => {
   if (!folder) {
     currentPath.value = []
     return
   }
 
-  // Pretend duplicate Breadcrumb
+  // check if folder already in current path
   if (currentPath.value.includes(folder.name)) {
     return
   }
@@ -104,7 +106,7 @@ const handleContentNavigation = async (target: Folder | number | null) => {
     // Klik pada "Root" di breadcrumb
     await loadInitialData()
   } else if (typeof target === 'number') {
-    // Jika mengklik breadcrumb yang sudah aktif, abaikan
+    // check if breadcrumb already active
     if (target === currentPath.value.length - 1) {
       return
     }
@@ -116,7 +118,7 @@ const handleContentNavigation = async (target: Folder | number | null) => {
       const { data } = await FolderService.getFolderByPath(clickedPath)
       
       if (data?.data) {
-        // Set current path sebelum handle folder select untuk mencegah duplikasi
+        // set current path
         currentPath.value = pathUntilIndex
         await handleFolderSelect(data.data)
       }
@@ -124,8 +126,7 @@ const handleContentNavigation = async (target: Folder | number | null) => {
       console.error('Error navigating to path:', error)
     }
   } else {
-    // Klik pada folder di content grid
-    // Cek apakah folder sudah ada di path saat ini
+    // check if folder already in current path
     if (currentPath.value.includes(target.name)) {
       return
     }
@@ -137,12 +138,29 @@ const handleContentNavigation = async (target: Folder | number | null) => {
 const loadInitialData = async () => {
   try {
     const { data } = await FolderService.getAllFolders()
-    if (data?.data && data.data.length > 0) {
-      const firstFolder = data.data[0]
-      await handleFolderSelect(firstFolder)
+
+    if (data) {
+      hasAnyFolders.value = data.length > 0
+
+      if (hasAnyFolders.value) {
+        // Sort folders by created_at to get the first created folder
+        const sortedFolders = [...data].sort((a, b) => {
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        })
+        
+        const firstCreatedFolder = sortedFolders[0]
+        await handleFolderSelect(firstCreatedFolder)
+      } else {
+        // Reset states when no folders exist
+        currentFolder.value = null
+        currentPath.value = []
+        folders.value = []
+        files.value = []
+      }
     }
   } catch (error) {
     console.error('Error loading initial data:', error)
+    hasAnyFolders.value = false
   }
 }
 
@@ -159,6 +177,7 @@ const handleCreateFolder = () => {
   isCreateFolderModalOpen.value = true
 }
 
+// Handle create folder from welcome banner
 const handleCreateFolderSubmit = async (data: { name: string, parent_id?: string }) => {
   try {
     const response = await FolderService.createFolder({
@@ -167,8 +186,15 @@ const handleCreateFolderSubmit = async (data: { name: string, parent_id?: string
     })
 
     if (response.data?.data) {
-      // Reload current folder contents
-      await loadFolderContents(currentFolder.value?.id || '')
+      hasAnyFolders.value = true
+      
+      // If this is the first folder, make it the current folder
+      if (!currentFolder.value) {
+        await handleFolderSelect(response.data.data)
+      } else {
+        // If creating subfolder, refresh current folder contents
+        await loadFolderContents(currentFolder.value.id)
+      }
     }
   } catch (error) {
     console.error('Error creating folder:', error)
@@ -195,9 +221,10 @@ const handleUploadComplete = async (uploadedFiles: any) => {
   <div class="min-h-screen bg-gray-100 font-mono">
     <Navbar @toggle-sidebar="toggleSidebar" />
 
-    <!-- Sidebar -->
+    <!-- Sidebar with currentFolderId -->
     <Sidebar 
       :is-open="isSidebarOpen"
+      :current-folder-id="currentFolder?.id"
       @select-folder="handleFolderSelect"
     />
 
@@ -207,6 +234,7 @@ const handleUploadComplete = async (uploadedFiles: any) => {
       :is-empty="!hasItems"
       :items="items"
       :current-folder="currentFolder"
+      :has-any-folders="hasAnyFolders"
       @navigate="handleContentNavigation"
       @create-folder="handleCreateFolder"
       @upload-file="handleUploadFile"

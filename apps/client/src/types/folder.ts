@@ -5,5 +5,6 @@ export interface Folder {
     parent_id?: string
     subfolders?: Folder[]
     isOpen?: boolean
-    type?: string
+    type?: string,
+    created_at: string
 } 
