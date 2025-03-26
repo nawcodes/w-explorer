@@ -29,9 +29,55 @@
                   d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
               </svg>
             </div>
-            <input type="text"
+            <input 
+              type="text"
+              v-model="searchQuery"
+              @input="handleSearch"
+              @focus="showDropdown = true"
               class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-64 pl-10 p-2.5 w-full"
-              placeholder="Search..." @input="$emit('search', ($event.target as HTMLInputElement).value)">
+              placeholder="Search folders and files..."
+            >
+            
+            <!-- Search Results Dropdown -->
+            <div 
+              v-if="showDropdown && searchResults.length > 0" 
+              class="absolute z-50 w-full mt-1 bg-white rounded-md shadow-lg border border-gray-200"
+            >
+              <div class="max-h-60 overflow-y-auto">
+                <div 
+                  v-for="item in searchResults" 
+                  :key="item.id"
+                  @click="handleItemClick(item)"
+                  class="p-2 hover:bg-gray-100 cursor-pointer flex items-center"
+                >
+                  <!-- Folder Icon -->
+                  <svg 
+                    v-if="item.type === 'folder'"
+                    class="w-5 h-5 mr-2 text-yellow-500"
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" 
+                    />
+                  </svg>
+                  <!-- File Icon -->
+                  <svg
+                    v-else
+                    class="w-5 h-5 mr-2 text-blue-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                    />
+                  </svg>
+                  <span class="text-gray-700">{{ item.name }}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -40,5 +86,85 @@
 </template>
 
 <script setup lang="ts">
-defineEmits(['toggle-sidebar', 'search'])
-</script> 
+import { ref, onMounted, onUnmounted } from 'vue'
+import { FolderService } from '../services/folder.service'
+import type { Folder } from '../types/folder'
+import type { File } from '../types/file'
+
+const emit = defineEmits(['toggle-sidebar', 'navigate'])
+
+const searchQuery = ref('')
+const searchResults = ref<(Folder | File)[]>([])
+const showDropdown = ref(false)
+
+// Debounce helper function
+const debounce = (fn: Function, delay: number) => {
+  let timeout: NodeJS.Timeout
+  return (...args: any[]) => {
+    clearTimeout(timeout)
+    timeout = setTimeout(() => fn(...args), delay)
+  }
+}
+
+const handleSearch = debounce(async () => {
+  if (!searchQuery.value.trim()) {
+    searchResults.value = []
+    return
+  }
+
+  try {
+    // Search folders and files simultaneously
+    const [folderResponse, fileResponse] = await Promise.all([
+      FolderService.searchFolders(searchQuery.value),
+      FolderService.searchFiles(searchQuery.value)
+    ])
+
+    const folders = (folderResponse.data || []).map(folder => ({
+      ...folder,
+      type: 'folder'
+    }))
+    
+    const files = (fileResponse.data || []).map(file => ({
+      ...file,
+      type: 'file'
+    }))
+
+    // Merge and sort results
+    searchResults.value = [...folders, ...files].sort((a, b) => 
+      a.name.localeCompare(b.name)
+    )
+  } catch (error) {
+    console.error('Error searching items:', error)
+    searchResults.value = []
+  }
+}, 300)
+
+const handleItemClick = (item: Folder | File) => {
+  searchQuery.value = ''
+  searchResults.value = []
+  showDropdown.value = false
+  emit('navigate', item)
+}
+
+// Close dropdown when clicking outside
+const handleClickOutside = (event: MouseEvent) => {
+  if (showDropdown.value && !(event.target as HTMLElement).closest('.relative')) {
+    showDropdown.value = false
+  }
+}
+
+// Add and remove click outside listener
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
+</script>
+
+<style scoped>
+.max-h-60 {
+  max-height: 15rem;
+}
+</style> 

@@ -37,6 +37,10 @@ export class FolderService {
         return await ApiService.post<Folder[]>('/folders/search', { searchTerm })
     }
 
+    static async searchFiles(searchTerm: string) {
+        return await ApiService.post<File[]>('/files/search', { searchTerm })
+    }
+
     static async getSubfolders(id: string) {
         try {
             const response = await ApiService.get<Folder[]>(`/folders/${id}/subfolders`)

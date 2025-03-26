@@ -154,7 +154,7 @@ export class FolderService {
             },
             include: {
                 files: true,
-                parent: true
+                subfolders: true
             }
         })
     }
@@ -315,6 +315,33 @@ export class FolderService {
                 ...file,
                 type: 'file'
             }))
+        }
+    }
+
+    async searchItems(searchTerm: string) {
+        const folders = await prisma.folder.findMany({
+            where: {
+                name: {
+                    contains: searchTerm,
+                    mode: 'insensitive'
+                }
+            }
+        })
+
+        const files = await prisma.file.findMany({
+            where: {
+                name: {
+                    contains: searchTerm,
+                    mode: 'insensitive'
+                }
+            }
+        })
+
+        return {
+            data: [
+                ...folders.map(folder => ({ ...folder, type: 'folder' })),
+                ...files.map(file => ({ ...file, type: 'file' }))
+            ]
         }
     }
 }

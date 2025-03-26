@@ -22,7 +22,7 @@ const hasItems = computed(() => items.value.length > 0)
 // Modal states
 const isCreateFolderModalOpen = ref(false)
 const isUploadFileModalOpen = ref(false)
-
+const isFileDetailModalOpen = ref(false)
 // Handle folder selection from sidebar or content
 const handleFolderSelect = async (folder: Folder) => {
   currentFolder.value = folder
@@ -247,12 +247,26 @@ const handleItemDelete = async (item: Folder | File) => {
   }
 }
 
+const handleSearchNavigation = async (item: Folder | File) => {  
+  if (item.type === 'folder') {
+    await handleFolderSelect(item as Folder)
+  } else {
+    // Handle file navigation if needed also pop up file modal
+    const parentFolder = await FolderService.getFolderById(item.folder_id)
+    if (parentFolder?.data) {
+      await handleFolderSelect(parentFolder.data)
+    }
+  }
+}
 
 </script>
 
 <template>
   <div class="min-h-screen bg-gray-100 font-mono">
-    <Navbar @toggle-sidebar="toggleSidebar" />
+    <Navbar 
+      @toggle-sidebar="toggleSidebar" 
+      @navigate="handleSearchNavigation"
+    />
 
     <!-- Sidebar with currentFolderId -->
     <Sidebar 
