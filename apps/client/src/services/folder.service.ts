@@ -27,6 +27,31 @@ export class FolderService {
     }
 
     static async getSubfolders(id: string) {
-        return await ApiService.get<Folder[]>(`/folders/${id}/subfolders`)
+        try {
+            const response = await ApiService.get<Folder[]>(`/folders/${id}/subfolders`)
+            return { data: response, error: null }
+        } catch (error) {
+            return { data: null, error }
+        }
+    }
+
+    static async getFolderPath(id: string) {
+        try {
+            const response = await ApiService.get<string>(`/folders/${id}/path`)
+            return { data: response, error: null }
+        } catch (error) {
+            return { data: null, error }
+        }
+    }
+
+    static async getFolderByPath(path: string) {
+        try {
+            const response = await ApiService.get<Folder>(`/folders/by-path`, {
+                params: { path }
+            })
+            return { data: response, error: null }
+        } catch (error) {
+            return { data: null, error }
+        }
     }
 } 
