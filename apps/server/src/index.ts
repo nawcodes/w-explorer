@@ -26,7 +26,6 @@ const PORT = process.env.PORT || 3000;
 
 async function testConnection() {
     try {
-        await prisma.folder.findFirst()
         console.log('Connected to Prisma ORM')
     } catch (error) {
         console.error('Failed to connect to Prisma ORM', error)

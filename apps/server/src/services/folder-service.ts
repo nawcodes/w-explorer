@@ -287,7 +287,9 @@ export class FolderService {
 
     async getFolderByPath(path: string) {
         const folder = await prisma.folder.findFirst({
-            where: { path },
+            where: {
+                name: path // Cari berdasarkan nama folder
+            },
             include: {
                 files: true,
                 subfolders: {
@@ -299,14 +301,14 @@ export class FolderService {
         })
 
         if (!folder) {
-            throw new Error(`Folder with path ${path} not found`)
+            return null
         }
 
         return {
             ...folder,
             type: 'folder',
-            subfolders: folder.subfolders.map(subfolder => ({
-                ...subfolder,
+            subfolders: folder.subfolders.map(sub => ({
+                ...sub,
                 type: 'folder'
             })),
             files: folder.files.map(file => ({

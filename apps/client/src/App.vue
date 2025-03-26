@@ -31,26 +31,41 @@ const handleFolderSelect = async (folder: Folder) => {
 
 // Update current path berdasarkan folder yang dipilih
 const updateCurrentPath = (folder: Folder) => {
+  if (!folder) {
+    currentPath.value = []
+    return
+  }
+
+  // Pretend duplicate Breadcrumb
+  if (currentPath.value.includes(folder.name)) {
+    return
+  }
+
   if (!folder.path) {
     currentPath.value = [folder.name]
     return
   }
 
-  // Hapus slash di awal dan akhir
+  // Remove Slashes
   const cleanPath = folder.path.replace(/^\/|\/$/g, '')
   
-  // Jika tidak ada slash di path, gunakan parent path + current folder
+  // If no slashes in path, use parent path + current folder
   if (!cleanPath.includes('/')) {
     if (folder.parent_id) {
-      currentPath.value = [...currentPath.value, folder.name]
+      // Check duplicate before adding
+      if (!currentPath.value.includes(folder.name)) {
+        currentPath.value = [...currentPath.value, folder.name]
+      }
     } else {
       currentPath.value = [folder.name]
     }
     return
   }
 
-  // Jika ada slash, split path seperti biasa
-  currentPath.value = cleanPath.split('/').filter(part => part.length > 0)
+  // If there is a slash, split path as usual
+  const newPath = cleanPath.split('/').filter(part => part.length > 0)
+  // Avoid duplicate path
+  currentPath.value = [...new Set(newPath)]
 }
 
 // Load contents dari folder yang dipilih
@@ -66,22 +81,26 @@ const loadFolderContents = async (folderId: string) => {
   }
 }
 
-// Handle navigasi dari content (click item atau breadcrumb)
+// Breadcrumb clicked
 const handleContentNavigation = async (target: Folder | number | null) => {
-  
   if (target === null) {
     // Klik pada "Root" di breadcrumb
     await loadInitialData()
   } else if (typeof target === 'number') {
-    // Klik pada breadcrumb item
+    // Jika mengklik breadcrumb yang sudah aktif, abaikan
+    if (target === currentPath.value.length - 1) {
+      return
+    }
+
     const pathUntilIndex = currentPath.value.slice(0, target + 1)
-    const fullPath = '/' + pathUntilIndex.join('/')
-    
+    const clickedPath = pathUntilIndex[target]
+      
     try {
-      const { data } = await FolderService.getFolderByPath(fullPath)
-      console.log(data);
+      const { data } = await FolderService.getFolderByPath(clickedPath)
       
       if (data?.data) {
+        // Set current path sebelum handle folder select untuk mencegah duplikasi
+        currentPath.value = pathUntilIndex
         await handleFolderSelect(data.data)
       }
     } catch (error) {
@@ -89,6 +108,10 @@ const handleContentNavigation = async (target: Folder | number | null) => {
     }
   } else {
     // Klik pada folder di content grid
+    // Cek apakah folder sudah ada di path saat ini
+    if (currentPath.value.includes(target.name)) {
+      return
+    }
     await handleFolderSelect(target)
   }
 }

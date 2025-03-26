@@ -45,10 +45,14 @@ export class FolderService {
     }
 
     static async getFolderByPath(path: string) {
+
         try {
-            const response = await ApiService.get<Folder>(`/folders/by-path`, {
-                params: { path }
+            const response = await ApiService.post<Folder>(`/folders/by-path`, {
+                path: path
             })
+
+            console.log(response);
+
             return { data: response, error: null }
         } catch (error) {
             return { data: null, error }

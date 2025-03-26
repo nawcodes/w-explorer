@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import 'reflect-metadata';
-import { Controller, Param, Body, Get, Post, Put, Delete, JsonController, Res, HttpCode, QueryParam } from 'routing-controllers';
+import { Controller, Param, Body, Get, Post, Put, Delete, JsonController, Res, HttpCode, QueryParam, QueryParams } from 'routing-controllers';
 import { FolderService } from '../services/folder-service';
 import {
     CreateFolderDto,
@@ -80,13 +80,21 @@ export class FolderController {
         return await this.folderService.getFolderContents(id)
     }
 
-    @Get('/by-path')
-    async getFolderByPath(@QueryParam('path') path: string) {
-        if (!path) {
+    @Post('/by-path')
+    async getFolderByPath(@Body() data: { path: string }) {
+        console.log(data);
+
+        if (!data.path) {
             throw new Error('Path is required')
         }
-        // Normalize path to ensure consistent format
-        const normalizedPath = '/' + path.split('/').filter(Boolean).join('/')
-        return await this.folderService.getFolderByPath(normalizedPath)
+
+        // Cari folder berdasarkan nama
+        const folder = await this.folderService.getFolderByPath(data.path)
+
+        if (!folder) {
+            throw new Error(`Folder ${data.path} not found`)
+        }
+
+        return folder
     }
 }

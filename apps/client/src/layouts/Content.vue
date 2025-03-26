@@ -69,7 +69,7 @@ const toggleCreateMenu = () => {
   isCreateMenuOpen.value = !isCreateMenuOpen.value
 }
 
-const handleItemClick = (item: Folder) => {  
+const handleItemClick = (item: Folder) => {    
   emit('navigate', item)
 }
 
