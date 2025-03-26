@@ -30,6 +30,7 @@ model file {
   folder_id String
   name       String
   path       String   @unique
+  url_file   String?
   mime_type  String?
   size       Int      @default(0)
   created_at DateTime @default(now())
