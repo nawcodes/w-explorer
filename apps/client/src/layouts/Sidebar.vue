@@ -97,6 +97,7 @@ const handleCreateRootFolder = async (name: string) => {
   })
   if (data) {
     rootFolders.value.push(data)
+    fetchRootFolders()
   } else if (error) {
     console.error('Error creating root folder:', error)
   }
