@@ -77,13 +77,11 @@ const updateCurrentPath = (folder: Folder) => {
   currentPath.value = [...new Set(newPath)]
 }
 
-// Load contents dari folder yang dipilih
 const loadFolderContents = async (folderId: string) => {
   try {
     const { data } = await FolderService.getFolderContents(folderId)
 
     if (data?.data) {
-      // Update folders dan files secara terpisah
       folders.value = data.data.folders.map(folder => ({
         ...folder,
         type: 'folder' as const
@@ -184,28 +182,12 @@ const handleUploadFile = () => {
   isUploadFileModalOpen.value = true
 }
 
-const handleUploadFileSubmit = async (data: { files: File[], folderId?: string }) => {
-  try {
-    const formData = new FormData()
-    data.files.forEach(file => {
-      formData.append('files', file)
-    })
-    
-    if (currentFolder.value?.id) {
-      formData.append('folderId', currentFolder.value.id)
-    }
-
-    const response = await FolderService.uploadFiles(formData)
-    
-    if (response.data) {
-      // Reload current folder contents
-      await loadFolderContents(currentFolder.value?.id || '')
-    }
-  } catch (error) {
-    console.error('Error uploading files:', error)
-  } finally {
+const handleUploadComplete = async (uploadedFiles: any) => {
     isUploadFileModalOpen.value = false
-  }
+    // Refresh folder contents
+    if (currentFolder.value?.id) {
+        await loadFolderContents(currentFolder.value.id)
+    }
 }
 </script>
 
@@ -239,10 +221,10 @@ const handleUploadFileSubmit = async (data: { files: File[], folderId?: string }
     />
     
     <UploadFileModal
-      :is-open="isUploadFileModalOpen"
-      :current-folder-id="currentFolder?.id"
+      v-if="isUploadFileModalOpen"
+      :current-folder-id="currentFolder?.id || ''"
       @close="isUploadFileModalOpen = false"
-      @upload="handleUploadFileSubmit"
+      @uploaded="handleUploadComplete"
     />
   </div>
 </template>

@@ -62,25 +62,39 @@ export class FolderService {
                 path: path
             })
 
-            console.log(response);
-
             return { data: response, error: null }
         } catch (error) {
             return { data: null, error }
         }
     }
 
-    static async uploadFiles(formData: FormData) {
+    static async uploadFiles(files: File[], folderId: string) {
+        const formData = new FormData();
+        files.forEach(file => {
+            formData.append('files', file as unknown as Blob);
+        });
+        formData.append('folder_id', folderId);
         try {
-            const response = await ApiService.post<any>('/files/upload', formData, {
+            const response = await fetch(new URL('http:localhost:3000/api/files/upload/bulk'), {
+                method: 'POST',
+                body: formData,
                 headers: {
-                    'Content-Type': 'multipart/form-data'
                 }
-            })
-            return { data: response, error: null }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Upload failed: ${response.statusText}`);
+            }
+
+            const result = await response.json();
+            console.log("Upload success:", result);
+            return result;
         } catch (error) {
-            return { data: null, error }
+            console.error("Upload error:", error);
+            throw error;
         }
+
+
     }
 
     static async getFolderContents(folderId: string) {

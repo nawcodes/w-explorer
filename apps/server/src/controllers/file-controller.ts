@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import 'reflect-metadata';
-import { Controller, Param, Body, Get, Post, Put, Delete, JsonController, Res, HttpCode } from 'routing-controllers';
+import { Controller, Param, Body, Get, Post, Put, Delete, JsonController, Res, HttpCode, UploadedFile, UploadedFiles, UseBefore, Req } from 'routing-controllers';
 import { FileService } from '../services/file-service';
 import {
     CreateFileDto,
@@ -11,6 +11,8 @@ import {
     BulkDeleteFileDto
 } from '../dtos/file.dto';
 import { Service } from 'typedi';
+import path from 'path';
+import { uploadConfig } from '../utils/multer.config';
 
 @JsonController('/files')
 @Service()
@@ -74,5 +76,42 @@ export class FileController {
     @Delete('/bulk')
     async removeBulk(@Body() data: BulkDeleteFileDto) {
         return await this.fileService.deleteBulkFiles(data.ids);
+    }
+
+
+    @Post('/upload/bulk')
+    @UseBefore(uploadConfig.array('files'))
+    @HttpCode(201)
+    async uploadMultiple(@Req() req: any, @Body() data: { folder_id: string }) {
+        try {
+            const files = req.files;
+            if (!files || files.length === 0) {
+                throw new Error('No files uploaded');
+            }
+
+            const filePromises = files.map(async (file: Express.Multer.File) => {
+                const relativePath = path.relative(
+                    path.join(process.cwd(), 'uploads'),
+                    file.path
+                );
+
+                return this.fileService.createFile({
+                    name: file.originalname,
+                    folder_id: data.folder_id,
+                    mime_type: file.mimetype,
+                    size: file.size,
+                    physical_path: relativePath
+                });
+            });
+
+            const results = await Promise.all(filePromises);
+            return {
+                message: 'Files uploaded successfully',
+                files: results
+            };
+        } catch (error) {
+            console.error('Upload error:', error);
+            throw error;
+        }
     }
 } 

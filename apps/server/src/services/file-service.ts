@@ -1,4 +1,6 @@
 import { prisma } from '../utils/prisma'
+import fs from 'fs/promises';
+import path from 'path';
 
 export class FileService {
     /**
@@ -36,29 +38,30 @@ export class FileService {
         name: string,
         folder_id: string,
         mime_type?: string,
-        size?: number
+        size?: number,
+        physical_path?: string
     }) {
-        // get folder path
         const folder = await prisma.folder.findUnique({
             where: { id: data.folder_id }
-        })
+        });
 
         if (!folder) {
-            throw new Error('Folder not found')
+            throw new Error('Folder not found');
         }
 
-        // create file path
-        const filePath = `${folder.path}/${data.name}`.replace(/\/+/g, '/')
+        const physicalFileName = data.physical_path?.split('/').pop() || data.name;
+        const virtualPath = `${folder.path}/${physicalFileName}`.replace(/\/+/g, '/');
 
         return await prisma.file.create({
             data: {
                 name: data.name,
-                path: filePath,
+                path: virtualPath,
                 folder_id: data.folder_id,
                 mime_type: data.mime_type,
-                size: data.size ?? 0
+                size: data.size ?? 0,
+                physical_path: data.physical_path
             }
-        })
+        });
     }
 
     /**
@@ -97,11 +100,25 @@ export class FileService {
      * delete file
      * @param id 
      * @returns 
+     * @todo: later
      */
     async deleteFile(id: string) {
+        const file = await prisma.file.findUnique({
+            where: { id }
+        });
+
+        if (file?.physical_path) {
+            try {
+                const fullPath = path.join(process.cwd(), 'uploads', file.physical_path);
+                await fs.promises.unlink(fullPath);
+            } catch (error) {
+                console.error('Error deleting physical file:', error);
+            }
+        }
+
         return await prisma.file.delete({
             where: { id }
-        })
+        });
     }
 
     /**
