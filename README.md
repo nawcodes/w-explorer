@@ -34,8 +34,8 @@
 
 1. At directory `apps/server` run:
    > bun run jest --clearCache && bun test
-   > result last
-![image](https://github.com/user-attachments/assets/c03a45c1-ea65-4548-8c03-3c54d7dea12d)
+- result last testing server
+- ![image](https://github.com/user-attachments/assets/c03a45c1-ea65-4548-8c03-3c54d7dea12d)
 
 
 ### Client
