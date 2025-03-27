@@ -94,7 +94,7 @@ export class FolderService {
         }
 
         // if name changed, update path
-        let updateData: Folder = { ...folder }
+        let updateData: Folder = { ...folder } as Folder
         if (data.name) {
             const parentPath = folder.path.substring(0, folder.path.lastIndexOf('/'))
             updateData.path = `${parentPath}/${data.name}`.replace(/\/+/g, '/')

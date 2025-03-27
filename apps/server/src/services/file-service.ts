@@ -1,6 +1,7 @@
 import { prisma } from '../utils/prisma'
 import fs from 'fs/promises';
 import path from 'path';
+import { FileInterface } from '../interfaces/file.interfaces';
 
 export class FileService {
     /**
@@ -83,7 +84,7 @@ export class FileService {
         }
 
         // if name changed, update path
-        let updateData = { ...data }
+        let updateData: FileInterface = { ...data } as FileInterface
         if (data.name) {
             updateData.path = `${file.folder.path}/${data.name}`.replace(/\/+/g, '/')
         }
@@ -108,7 +109,8 @@ export class FileService {
         if (file?.physical_path) {
             try {
                 const fullPath = path.join(process.cwd(), 'uploads', file.physical_path);
-                await fs.promises.unlink(fullPath);
+                // unlink file
+                await fs.unlink(fullPath);
             } catch (error) {
                 console.error('Error deleting physical file:', error);
             }
