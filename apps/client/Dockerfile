@@ -2,16 +2,16 @@ FROM oven/bun:1
 
 WORKDIR /app
 
-COPY package.json .
-COPY bun.lockb .
-COPY apps/client/package.json ./apps/client/
+# Salin semua file monorepo untuk mendukung workspaces
+COPY . .
 
-RUN bun install
+# Install dependencies untuk seluruh workspace
+RUN bun install --frozen-lockfile
 
-COPY apps/client ./apps/client
-
+# Masuk ke client
 WORKDIR /app/apps/client
 
 EXPOSE 5173
 
-CMD ["bun", "run", "dev", "--host"] 
+# Jalankan client
+CMD ["bun", "run", "dev", "--host"]
