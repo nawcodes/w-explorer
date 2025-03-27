@@ -65,4 +65,4 @@ Aplikasi akan tersedia di:
 
 - Client: http://localhost:5173
 - Server: http://localhost:3000
-- Database: localhost:5432
+- Database Host: localhost:5432 / postgres:5432
