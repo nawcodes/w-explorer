@@ -1,7 +1,8 @@
 # WExplorer
-## Preview 
-![image](https://github.com/user-attachments/assets/f02a4fe0-a772-4b15-b0ef-5752b2b367d6)
 
+## Preview
+
+![image](https://github.com/user-attachments/assets/f02a4fe0-a772-4b15-b0ef-5752b2b367d6)
 
 ## Commands
 
@@ -34,17 +35,34 @@
 
 1. At directory `apps/server` run:
    > bun run jest --clearCache && bun test
+
 - result last testing server
 - ![image](https://github.com/user-attachments/assets/c03a45c1-ea65-4548-8c03-3c54d7dea12d)
-
 
 ### Client
 
 > `Pending ...`
 
 ## Setup Via Docker
-> `Pending ...`
 
+1. Pastikan Docker dan Docker Compose terinstall di sistem Anda
+2. Copy file `.env.example` menjadi `.env` di folder `apps/server` dan `apps/client`
+3. Jalankan perintah:
+   ```bash
+   docker-compose up -d
+   ```
+4. Tunggu hingga semua container berjalan
+5. Jalankan migrasi database:
+   ```bash
+   docker-compose exec server bunx prisma migrate dev
+   ```
+6. (Opsional) Jalankan seeder:
+   ```bash
+   docker-compose exec server bun run prisma/seed.ts
+   ```
 
+Aplikasi akan tersedia di:
 
-
+- Client: http://localhost:5173
+- Server: http://localhost:3000
+- Database: localhost:5432
