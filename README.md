@@ -5,8 +5,8 @@
 
 ## Commands
 
-1. bun dev:server
-2. bun dev:client
+1. `bun run dev:server`
+2. `bun run dev:client`
 3. `bun run dev:server-prisma-migrate` - Run only the server migrate (Need set DB Url on environment first)
 4. `bun run dev:server-seed` - Run only the server seed (Need set DB Url on environment)
 
