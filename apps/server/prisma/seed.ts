@@ -17,8 +17,8 @@ const CONFIG_SEED = {
         max: randomInt(20, 30)
     },
     file: {
-        min: 100,
-        max: randomInt(110, 200)
+        min: 10,
+        max: randomInt(20, 30)
     }
 }
 
@@ -70,7 +70,7 @@ async function createFolderStructure(parentId: string | null): Promise<void> {
     // Prepare folder data
     for (let i = 0; i < folderCount; i++) {
         const baseFolderName = faker.system.directoryPath().split('/').pop() || faker.system.fileName()
-        const folderName = generateUniqueName(baseFolderName)
+        const folderName = generateUniqueName(baseFolderName) + `_${i}`
 
         folderData.push({
             name: folderName,
@@ -101,12 +101,16 @@ async function main() {
     await prisma.folder.deleteMany()
 
     try {
-        const rootName = generateUniqueName('Root')
-        const rootFolder = await folderService.createFolder({
-            name: rootName,
-        })
 
-        await createFolderStructure(rootFolder.id)
+        // generate root folder 
+        for (let i = 0; i < randomInt(10, 50); i++) {
+            const rootName = generateUniqueName(faker.system.fileName())
+            const rootFolder = await folderService.createFolder({
+                name: rootName,
+            })
+
+            await createFolderStructure(rootFolder.id)
+        }
         console.log('✅ Seeding selesai!')
     } catch (error) {
         console.error('❌ Error dalam seeding:', error)
