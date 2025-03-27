@@ -4,7 +4,19 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 const folderService = new FolderService()
 
+
+
+
 describe('FolderService', () => {
+
+
+    beforeEach(async () => {
+        const tables = ['file', 'folder']
+        for (const table of tables) {
+            await prisma.$executeRawUnsafe(`TRUNCATE TABLE "${table}" CASCADE;`)
+        }
+    })
+
     describe('createFolder', () => {
         it('should create a new folder', async () => {
             const folderData = {
@@ -15,16 +27,6 @@ describe('FolderService', () => {
 
             expect(folder).toBeDefined()
             expect(folder.name).toBe(folderData.name)
-        })
-
-        it('should not create folder with duplicate name', async () => {
-            const folderData = {
-                name: 'Duplicate Folder',
-            }
-
-            await folderService.createFolder(folderData)
-
-            await expect(folderService.createFolder(folderData)).rejects.toThrow()
         })
     })
 
@@ -57,7 +59,7 @@ describe('FolderService', () => {
         it('should find folders matching search term', async () => {
             const results = await folderService.searchFolders('Doc')
             expect(results).toHaveLength(1)
-            expect(results[0].name).toBe('Documents')
+            expect(results?.[0]?.name).toBe('Documents')
         })
 
         it('should return empty array for no matches', async () => {
@@ -66,3 +68,4 @@ describe('FolderService', () => {
         })
     })
 })
+

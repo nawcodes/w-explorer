@@ -1,3 +1,4 @@
+import { Folder } from '../interfaces/folder.interfaces'
 import { prisma } from '../utils/prisma'
 
 export class FolderService {
@@ -35,6 +36,17 @@ export class FolderService {
         name: string,
         parent_id?: string,
     }) {
+
+        const existingFolder = await prisma.folder.findFirst({
+            where: {
+                name: data.name
+            }
+        })
+
+        if (existingFolder) {
+            data.name = `${data.name}-${Date.now()}`
+        }
+
         // if parent_id, get parent path
         let parentPath = '/'
         if (data.parent_id) {
@@ -49,7 +61,6 @@ export class FolderService {
             }
         }
 
-        // create new path dengan memastikan ada slash di antara parent dan nama folder
         const newPath = parentPath === '/'
             ? `/${data.name}`
             : `${parentPath}/${data.name}`
@@ -66,9 +77,10 @@ export class FolderService {
 
     /**
      * update onces folder
+     * @deprecated
      * @param id 
      * @param data 
-     * @returns 
+     * @returns
      */
     async updateFolder(id: string, data: {
         name?: string,
@@ -82,7 +94,7 @@ export class FolderService {
         }
 
         // if name changed, update path
-        let updateData = { ...data }
+        let updateData: Folder = { ...folder }
         if (data.name) {
             const parentPath = folder.path.substring(0, folder.path.lastIndexOf('/'))
             updateData.path = `${parentPath}/${data.name}`.replace(/\/+/g, '/')

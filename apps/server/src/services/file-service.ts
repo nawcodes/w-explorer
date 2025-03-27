@@ -65,10 +65,8 @@ export class FileService {
     }
 
     /**
-     * update file
-     * @param id 
-     * @param data 
-     * @returns 
+     * @deprecated
+     * @note not including on the scope of the project
      */
     async updateFile(id: string, data: {
         name?: string,
@@ -188,6 +186,8 @@ export class FileService {
 
     /**
      * Update multiple files
+     * @deprecated
+     * @note not including on the scope of the project
      */
     async updateBulkFiles(data: Array<{
         id: string,
@@ -222,7 +222,8 @@ export class FileService {
     }
 
     /**
-     * Delete multiple files
+     * @deprecated
+     * @note not including on the scope of the project
      */
     async deleteBulkFiles(ids: string[]) {
         return await prisma.file.deleteMany({

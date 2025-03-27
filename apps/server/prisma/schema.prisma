@@ -9,7 +9,7 @@ datasource db {
 
 // SELF RELATIONAL
 
-model folder {
+model Folder {
   id         String   @id @default(uuid())
   parent_id  String?
   name       String
@@ -17,15 +17,16 @@ model folder {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  files file[] @relation("FolderFiles")
-  parent     folder?  @relation("FolderToSubfolders", fields: [parent_id], references: [id])
-  subfolders folder[] @relation("FolderToSubfolders")
+  files File[] @relation("FolderFiles")
+  parent     Folder?  @relation("FolderToSubfolders", fields: [parent_id], references: [id])
+  subfolders Folder[] @relation("FolderToSubfolders")
 
   @@index([parent_id])
   @@index([path])
+  @@map("folder")
 }
 
-model file {
+model File {
   id         String   @id @default(uuid())
   folder_id String
   name       String
@@ -36,7 +37,8 @@ model file {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  folder    folder @relation("FolderFiles", fields: [folder_id], references: [id])
+  folder    Folder @relation("FolderFiles", fields: [folder_id], references: [id])
   @@index([folder_id])
   @@index([path])
+  @@map("file")
 }

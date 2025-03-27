@@ -8,4 +8,4 @@ export default {
     },
     moduleFileExtensions: ['ts', 'js', 'json', 'node'],
     setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
-} 
+}

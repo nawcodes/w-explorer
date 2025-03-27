@@ -60,6 +60,10 @@ export class FolderController {
         return await this.folderService.createBulkFolders(data.folders);
     }
 
+    /**
+     * @deprecated
+     * @note not including on the scope of the project
+     */
     @Put('/bulk')
     async updateBulk(@Body() data: BulkUpdateFolderDto[]) {
         return await this.folderService.updateBulkFolders(data);
@@ -70,6 +74,10 @@ export class FolderController {
         return await this.folderService.searchFolders(data.searchTerm);
     }
 
+    /**
+     * @deprecated
+     * @note not including on the scope of the project
+     */
     @Delete('/bulk')
     async removeBulk(@Body() data: BulkDeleteFolderDto) {
         return await this.folderService.deleteBulkFolders(data.ids);
