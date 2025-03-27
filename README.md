@@ -1,24 +1,26 @@
 # WExplorer
 
-## Preview
+# Preview
 
 ![image](https://github.com/user-attachments/assets/f02a4fe0-a772-4b15-b0ef-5752b2b367d6)
 
-## Commands
+# Commands
 
 1. `bun run dev:server`
 2. `bun run dev:client`
 3. `bun run dev:server-prisma-migrate` - Run only the server migrate (Need set DB Url on environment first)
 4. `bun run dev:server-seed` - Run only the server seed (Need set DB Url on environment)
 
-## Requirements
+# Requirements
 
 1. Vue `v3^`
 2. NodeJS `v18^`
 3. Bun `v1^`
-4. PostgreSQL `v15^`
+4. PostgreSQL `v17^` @alpine
 
-## Setup and Install
+# Setup and Install
+
+## Setup Manually
 
 1. At root folder run `bun install`
    > - For make sure do at `apps/server` then run `bun install`
@@ -28,20 +30,6 @@
 4. Run `bun run dev:server-migrate-dev`
 5. (Optional) Run `bun run dev:server-seed`
 6. Run `bun run dev:server
-
-## Unitest
-
-### Server
-
-1. At directory `apps/server` run:
-   > bun run jest --clearCache && bun test
-
-- result last testing server
-- ![image](https://github.com/user-attachments/assets/c03a45c1-ea65-4548-8c03-3c54d7dea12d)
-
-### Client
-
-> `Pending ...`
 
 ## Setup Via Docker
 
@@ -66,3 +54,17 @@ Aplikasi akan tersedia di:
 - Client: http://localhost:5173
 - Server: http://localhost:3000
 - Database Host: localhost:5432 / postgres:5432
+
+# UNIT TEST
+
+## Server
+
+1. At directory `apps/server` run:
+   > bun run jest --clearCache && bun test
+
+- result last testing server
+- ![image](https://github.com/user-attachments/assets/c03a45c1-ea65-4548-8c03-3c54d7dea12d)
+
+### Client
+
+> `Pending ...`
