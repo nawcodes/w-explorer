@@ -26,62 +26,6 @@ const isUploadFileModalOpen = ref(false)
 const isFileDetailModalOpen = ref(false)
 const selectedFile = ref<File | null>(null)
 
-// Handle folder selection from sidebar or content
-const handleFolderSelect = async (folder: Folder) => {
-  currentFolder.value = folder
-  folder.type = 'folder'
-  
-  // if folder has parent_id, we need to build the full path
-  if (folder.parent_id && !folder.path?.includes('/')) {
-    const parentFolder = await FolderService.getFolderById(folder.parent_id)
-    if (parentFolder?.data) {
-      const parentPath = parentFolder.data.path || parentFolder.data.name
-      folder.path = `${parentPath}/${folder.name}`
-    }
-  }
-  
-  updateCurrentPath(folder)
-  await loadFolderContents(folder.id)
-}
-
-// update current path
-const updateCurrentPath = (folder: Folder) => {
-  if (!folder) {
-    currentPath.value = []
-    return
-  }
-
-  // check if folder already in current path
-  if (currentPath.value.includes(folder.name)) {
-    return
-  }
-
-  if (!folder.path) {
-    currentPath.value = [folder.name]
-    return
-  }
-
-  // Remove Slashes
-  const cleanPath = folder.path.replace(/^\/|\/$/g, '')
-  
-  // If no slashes in path, use parent path + current folder
-  if (!cleanPath.includes('/')) {
-    if (folder.parent_id) {
-      // Check duplicate before adding
-      if (!currentPath.value.includes(folder.name)) {
-        currentPath.value = [...currentPath.value, folder.name]
-      }
-    } else {
-      currentPath.value = [folder.name]
-    }
-    return
-  }
-
-  // If there is a slash, split path as usual
-  const newPath = cleanPath.split('/').filter(part => part.length > 0)
-  // Avoid duplicate path
-  currentPath.value = [...new Set(newPath)]
-}
 
 const loadFolderContents = async (folderId: string) => {
   try {
@@ -109,7 +53,7 @@ const handleContentNavigation = async (target: Folder | number | null) => {
   if (target === null) {
     // Klik pada "Root" di breadcrumb
     await loadInitialData()
-  } else if (typeof target === 'number') {
+  } else if (typeof target === 'number') {    
     // check if breadcrumb already active
     if (target === currentPath.value.length - 1) {
       return
@@ -117,7 +61,7 @@ const handleContentNavigation = async (target: Folder | number | null) => {
 
     const pathUntilIndex = currentPath.value.slice(0, target + 1)
     const clickedPath = pathUntilIndex[target]
-      
+    
     try {
       const { data } = await FolderService.getFolderByPath(clickedPath)
       
@@ -129,8 +73,7 @@ const handleContentNavigation = async (target: Folder | number | null) => {
     } catch (error) {
       console.error('Error navigating to path:', error)
     }
-  } else {
-    // check if folder already in current path
+  } else {    
     if (currentPath.value.includes(target.name)) {
       return
     }
@@ -138,10 +81,80 @@ const handleContentNavigation = async (target: Folder | number | null) => {
   }
 }
 
+
+// this fn is every click folder or file on sidebar or content
+const handleFolderSelect = async (folder: Folder) => {  
+  
+  currentFolder.value = folder
+  folder.type = 'folder'
+  // if is not root folder, we need to build the full path
+  if (folder.parent_id && !folder.path?.includes('/')) {    
+    const parentFolder = await FolderService.getFolderById(folder.parent_id)
+    console.log('parentFolder', parentFolder);
+    
+    if (parentFolder?.data) {
+      const parentPath = parentFolder.data.path || parentFolder.data.name
+      folder.path = `${parentPath}/${folder.name}`
+      console.log(folder);
+      
+    }
+  }
+  
+  updateCurrentPath(folder)
+  await loadFolderContents(folder.id)
+}
+
+// update current path
+const updateCurrentPath = (folder: Folder) => {
+  if (!folder) {
+    currentPath.value = []
+    return
+  }
+
+  // check if folder already in current path
+  if (currentPath.value.includes(folder.name)) {
+    return
+  }
+
+  if (!folder.path) {
+    currentPath.value = [folder.name]
+    return
+  }
+
+  // explode path 
+  const cleanPath = folder.path.replace(/^\/|\/$/g, '')
+  
+  // If no slashes in path, use parent path + current folder
+  if (!cleanPath.includes('/')) {
+    
+    // if (folder.parent_id) {
+    //   console.log('parent_id');
+      
+    //   // Check duplicate before adding
+    //   if (!currentPath.value.includes(folder.name)) {
+    //     currentPath.value = [...currentPath.value, folder.name]
+    //   }
+    // } else {
+      // currentPath.value = [folder.name]
+    // }
+
+    currentPath.value = [folder.name]
+  }
+
+  // console.log(cleanPath);
+  
+  const newPath = cleanPath.split('/').filter(part => part.length > 0)
+
+  // console.log(newPath);
+  
+  // Avoid duplicate path
+  currentPath.value = [...new Set(newPath)]
+}
+
 // Load initial data
 const loadInitialData = async () => {
   try {
-    const { data } = await FolderService.getAllFolders()
+    const { data } = await FolderService.getAllFolders()    
 
     if (data) {
       hasAnyFolders.value = data.length > 0
@@ -169,10 +182,6 @@ const loadInitialData = async () => {
   }
 }
 
-onMounted(() => {
-  loadInitialData()
-})
-
 const toggleSidebar = () => {
   isSidebarOpen.value = !isSidebarOpen.value
 }
@@ -185,6 +194,11 @@ const handleCreateFolder = () => {
 // Handle create folder from welcome banner
 const handleCreateFolderSubmit = async (data: { name: string, parent_id?: string }) => {
   try {
+    // prevent special characters and return error if exists
+    if (/[^a-zA-Z0-9]/.test(data.name)) {
+      throw new Error('Special characters are not allowed')
+    }
+
     const response = await FolderService.createFolder({
       name: data.name,
       parent_id: currentFolder.value?.id
@@ -213,7 +227,7 @@ const handleUploadFile = () => {
   isUploadFileModalOpen.value = true
 }
 
-const handleUploadComplete = async (uploadedFiles: any) => {
+const handleUploadComplete = async () => {
     isUploadFileModalOpen.value = false
     // Refresh folder contents
     if (currentFolder.value?.id) {
@@ -224,7 +238,9 @@ const handleUploadComplete = async (uploadedFiles: any) => {
 const handleItemDelete = async (item: Folder | File) => {
   // check if this current folder want to delete
   let willDeleteCurrentFolder = false
+  
   if (item.id === currentFolder.value?.id) {
+    // usually is root folder
     willDeleteCurrentFolder = true
   }
 
@@ -250,22 +266,15 @@ const handleItemDelete = async (item: Folder | File) => {
   }
 }
 
-const handleSearchNavigation = async (item: Folder | File) => {  
-  if (item.type === 'folder') {
-    await handleFolderSelect(item as Folder)
-  } else {
-    // Handle file navigation if needed also pop up file modal
-    const parentFolder = await FolderService.getFolderById(item.folder_id)
-    if (parentFolder?.data) {
-      await handleFolderSelect(parentFolder.data)
-    }
-  }
-}
 
 const handleShowFileDetail = (file: File) => {
   selectedFile.value = file
   isFileDetailModalOpen.value = true
 }
+
+onMounted(() => {
+  loadInitialData()
+})
 
 </script>
 
